@@ -1,0 +1,7 @@
+transformers
+peft
+datasets
+accelerate
+bitsandbytes
+google-cloud-storage
+scipy
