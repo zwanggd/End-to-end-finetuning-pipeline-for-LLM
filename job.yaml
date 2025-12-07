@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-job-1765127724
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: default
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+      tolerations:
+        - key: "cloud.google.com/gke-accelerator"
+          operator: "Exists"
+          effect: "NoSchedule"
+      
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      - name: dshm
+        emptyDir:
+          medium: Memory
+
+      initContainers:
+      - name: data-loader
+        image: google/cloud-sdk:alpine
+        command:
+        - "sh"
+        - "-c"
+        - "echo 'Downloading data...' && gsutil cp gs://e2ellm/staging/job-1765127724/dataset.jsonl /data/dataset.jsonl"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+
+      containers:
+      - name: trainer
+        image: gcr.io/stone-arch-474701-u5/finetuner:latest
+        imagePullPolicy: Always
+        command: ["python", "src/main.py"]
+        args:
+        - "--gcp_project"
+        - "stone-arch-474701-u5"
+        - "--gcp_bucket"
+        - "e2ellm"
+        - "--data_path"
+        - "/data/dataset.jsonl"
+        - "--model_name"
+        - "Qwen/Qwen2.5-0.5B-Instruct"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: "16Gi"
+            cpu: "4"
+          requests:
+            memory: "8Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: dshm
+          mountPath: /dev/shm

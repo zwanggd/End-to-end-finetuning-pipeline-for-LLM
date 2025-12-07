@@ -17,15 +17,18 @@ echo "  [Pipeline] Starting Finetuning Pipeline: $JOB_ID"
 echo "   Project: $PROJECT_ID"
 echo "   Bucket:  $BUCKET_NAME"
 echo "   Data:    $LOCAL_DATA_PATH"
+echo "   Model:    $MODEL_NAME"
+echo "   Image repo:    $IMAGE_REPO"
 
 # 1. Compose image and push to GCR
-if [ -f "Dockerfile" ]; then
-    echo "🐳 [Build] Building and Pushing Docker Image..."
-    docker build -t $IMAGE_URI .
-    docker push $IMAGE_URI
-    echo "   Image pushed: $IMAGE_URI"
+EXISTS=$(gcloud container images list-tags $IMAGE_REPO --filter="tags:$IMAGE_TAG" --format="value(tags)")
+
+if [ "$EXISTS" == "$IMAGE_TAG" ]; then
+    echo "Image already exists: $IMAGE_URI. Skipping build and push."
 else
-    echo "⚠️ [Build] No Dockerfile found, assuming image exists: $IMAGE_URI"
+    echo "Building and pushing $IMAGE_URI ..."
+    docker build -t "$IMAGE_URI" .
+    docker push "$IMAGE_URI"
 fi
 
 # 2. Upload dataset to GCS
@@ -34,7 +37,7 @@ GCS_DATA_PATH="gs://$BUCKET_NAME/staging/$JOB_ID/dataset.jsonl"
 gcloud storage cp "$LOCAL_DATA_PATH" "$GCS_DATA_PATH"
 
 # 3. create K8s Job manifest
-echo "⚙️ [K8s] Generating Job Manifest..."
+echo "[K8s] Generating Job Manifest..."
 cat <<EOF > job.yaml
 apiVersion: batch/v1
 kind: Job
@@ -45,8 +48,13 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      # 确保这里用的 ServiceAccount 有 GCS 读写权限 (Storage Object Admin)
-      serviceAccountName: default 
+      serviceAccountName: default
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+      tolerations:
+        - key: "cloud.google.com/gke-accelerator"
+          operator: "Exists"
+          effect: "NoSchedule"
       
       volumes:
       - name: data-volume
@@ -96,7 +104,7 @@ spec:
 EOF
 
 # 4. apply K8s Job
-echo "🚀 [Submit] Applying Job to Kubernetes..."
+echo "[Submit] Applying Job to Kubernetes..."
 kubectl apply -f job.yaml
 
 echo "  [Done] Pipeline Triggered Successfully!"
