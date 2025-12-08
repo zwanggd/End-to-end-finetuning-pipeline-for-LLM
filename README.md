@@ -67,7 +67,7 @@ You can configure the pipeline by setting environment variables or modifying the
 
 ## Usage
 
-### 1\. Build and Push Image
+### 1\. (First Time User) Build and Push Image
 
 If this is your first run or if you have modified the code in `src/`, build and push the Docker image to Google Container Registry (GCR) or Artifact Registry.
 
