@@ -19,7 +19,8 @@ def main():
     parser.add_argument("--gcp_bucket", type=str, required=True, help="GCS Bucket Name")
     parser.add_argument("--data_path", type=str, default="/data/dataset.jsonl", help="Path to standardized JSONL data")
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-0.5B-Instruct", help="HF Model ID")
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=str, default="1")
+    parser.add_argument("--learning_rate", type=str, default="1e-4")
     args = parser.parse_args()
 
     # 1. Initialize Tracker
@@ -74,9 +75,9 @@ def main():
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM, 
             inference_mode=False, 
-            r=8, 
-            lora_alpha=32, 
-            lora_dropout=0.1
+            r=32, 
+            lora_alpha=64, 
+            lora_dropout=0.0
         )
         model = get_peft_model(model, peft_config)
         model.print_trainable_parameters()
@@ -87,8 +88,8 @@ def main():
             output_dir=output_dir,
             per_device_train_batch_size=1,
             gradient_accumulation_steps=1,
-            learning_rate=1e-4,
-            num_train_epochs=0.1,
+            learning_rate=float(args.learning_rate),
+            num_train_epochs=int(args.epochs),
             logging_steps=10,
             save_strategy="no", # we will handle saving ourselves
             report_to="none",   # disable default logging

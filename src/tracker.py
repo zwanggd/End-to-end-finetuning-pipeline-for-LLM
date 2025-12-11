@@ -29,7 +29,7 @@ class CloudTracker:
         self.exp_path = os.path.join(self.local_root, self.exp_id)
         os.makedirs(self.exp_path, exist_ok=True)
         
-        print(f"🚀 Experiment Started: {self.exp_id}")
+        print(f"Experiment Started: {self.exp_id}")
         
         if config:
             self.save_artifact("config.json", config)
@@ -60,7 +60,7 @@ class CloudTracker:
             print(" No GCS bucket configured, skipping sync.")
             return
 
-        self.log_message("☁️ Syncing to GCS...")
+        self.log_message("Syncing to GCS...")
         remote_prefix = f"experiments/{self.exp_id}"
         
         for root, _, files in os.walk(self.exp_path):

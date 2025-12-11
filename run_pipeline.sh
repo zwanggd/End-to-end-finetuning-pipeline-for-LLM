@@ -82,6 +82,10 @@ spec:
         - "/data/dataset.jsonl"
         - "--model_name"
         - "$MODEL_NAME"
+        - "--epochs"
+        - "5"
+        - "--learning_rate"
+        - "5e-4"
         resources:
           requests:
             cpu: "2"

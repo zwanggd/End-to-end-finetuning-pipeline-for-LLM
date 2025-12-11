@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: finetune-job-1765401682
+  name: finetune-job-1765430640
 spec:
   backoffLimit: 1
   template:
@@ -22,7 +22,7 @@ spec:
         command:
         - "sh"
         - "-c"
-        - "echo 'Downloading data...' && gsutil cp gs://e2ellm/staging/job-1765401682/dataset.jsonl /data/dataset.jsonl"
+        - "echo 'Downloading data...' && gsutil cp gs://e2ellm/staging/job-1765430640/dataset.jsonl /data/dataset.jsonl"
         volumeMounts:
         - name: data-volume
           mountPath: /data
@@ -41,6 +41,10 @@ spec:
         - "/data/dataset.jsonl"
         - "--model_name"
         - "Qwen/Qwen2.5-0.5B-Instruct"
+        - "--epochs"
+        - "5"
+        - "--learning_rate"
+        - "5e-4"
         resources:
           requests:
             cpu: "2"
