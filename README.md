@@ -16,16 +16,18 @@ The pipeline follows a decoupled architecture using Docker and Kubernetes Jobs:
 ## Project Structure
 
 ```text
-.env.example            # Sample environment variables used by the pipeline scripts
-Dockerfile              # GPU-enabled image for the trainer
-Dockerfile.cpu          # CPU-only image variant
+.env.example            # Environment variables used by the pipeline scripts
+.gitignore              # Local ignores
+Dockerfile              # GPU-enabled image
+Dockerfile.cpu          # CPU-only image
 README.md
 dataset/                # Sample Alpaca data and derived JSONL for tests
 ├── alpaca_data.json
 └── dataset.jsonl
-job.yaml                # Example/generated Kubernetes Job manifest
-requirements.txt        # Python dependencies for training
-run_pipeline.sh         # Builds image, uploads data, and submits the K8s Job
+download.sh             # Script to get a finished model from GCS
+job.yaml                # Generated Kubernetes Job manifest
+requirements.txt        # Python dependencies
+run_pipeline.sh         # Main Script
 src/                    # Training entrypoints
 ├── main.py             # Finetuning script with LoRA + tracker integration
 └── tracker.py          # Uploads artifacts/logs to GCS
