@@ -7,7 +7,7 @@ LOCAL_DATA_PATH=${LOCAL_DATA_PATH:-"./dataset.jsonl"}
 MODEL_NAME=${MODEL_NAME:-"Qwen/Qwen2.5-0.5B-Instruct"}
 
 IMAGE_REPO="gcr.io/$PROJECT_ID/finetuner"
-IMAGE_TAG="latest"
+IMAGE_TAG="cpu-latest" # CPU
 IMAGE_URI="$IMAGE_REPO:$IMAGE_TAG"
 
 JOB_ID="job-$(date +%s)"
@@ -44,17 +44,11 @@ kind: Job
 metadata:
   name: finetune-$JOB_ID
 spec:
-  backoffLimit: 0
+  backoffLimit: 1
   template:
     spec:
       restartPolicy: Never
-      serviceAccountName: default
-      nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-      tolerations:
-        - key: "cloud.google.com/gke-accelerator"
-          operator: "Exists"
-          effect: "NoSchedule"
+      serviceAccountName: trainer-sa
       
       volumes:
       - name: data-volume
@@ -89,13 +83,14 @@ spec:
         - "--model_name"
         - "$MODEL_NAME"
         resources:
-          limits:
-            nvidia.com/gpu: 1
-            memory: "16Gi"
-            cpu: "4"
           requests:
-            memory: "8Gi"
             cpu: "2"
+            memory: "16Gi"
+            ephemeral-storage: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "32Gi"
+            ephemeral-storage: "4Gi"
         volumeMounts:
         - name: data-volume
           mountPath: /data

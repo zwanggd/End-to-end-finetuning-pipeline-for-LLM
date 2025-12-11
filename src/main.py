@@ -33,7 +33,8 @@ def main():
         if not os.path.exists(args.data_path):
             raise FileNotFoundError(f"Dataset not found at {args.data_path}")
             
-        dataset = load_dataset("json", data_files=args.data_path, split="train")
+        dataset = load_dataset("json", data_files=args.data_path)["train"]
+        dataset = dataset.select(range(min(100, len(dataset))))
         tracker.log_message(f"Dataset loaded. Rows: {len(dataset)}")
 
         # 3. prepare tokenizer
@@ -66,8 +67,8 @@ def main():
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name, 
             trust_remote_code=True,
-            device_map="auto",
-            torch_dtype=torch.float16
+            # device_map="auto",
+            # torch_dtype=torch.float16
         )
         
         peft_config = LoraConfig(
@@ -84,14 +85,14 @@ def main():
         output_dir = tracker.get_output_dir()
         training_args = TrainingArguments(
             output_dir=output_dir,
-            per_device_train_batch_size=4,
-            gradient_accumulation_steps=4,
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=1,
             learning_rate=1e-4,
-            num_train_epochs=args.epochs,
+            num_train_epochs=0.1,
             logging_steps=10,
             save_strategy="no", # we will handle saving ourselves
             report_to="none",   # disable default logging
-            fp16=True
+            fp16=False # CPU TEST
         )
 
         trainer = Trainer(

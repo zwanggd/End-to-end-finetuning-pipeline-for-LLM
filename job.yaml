@@ -1,19 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: finetune-job-1765127724
+  name: finetune-job-1765401682
 spec:
-  backoffLimit: 0
+  backoffLimit: 1
   template:
     spec:
       restartPolicy: Never
-      serviceAccountName: default
-      nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
-      tolerations:
-        - key: "cloud.google.com/gke-accelerator"
-          operator: "Exists"
-          effect: "NoSchedule"
+      serviceAccountName: trainer-sa
       
       volumes:
       - name: data-volume
@@ -28,14 +22,14 @@ spec:
         command:
         - "sh"
         - "-c"
-        - "echo 'Downloading data...' && gsutil cp gs://e2ellm/staging/job-1765127724/dataset.jsonl /data/dataset.jsonl"
+        - "echo 'Downloading data...' && gsutil cp gs://e2ellm/staging/job-1765401682/dataset.jsonl /data/dataset.jsonl"
         volumeMounts:
         - name: data-volume
           mountPath: /data
 
       containers:
       - name: trainer
-        image: gcr.io/stone-arch-474701-u5/finetuner:latest
+        image: gcr.io/stone-arch-474701-u5/finetuner:cpu-latest
         imagePullPolicy: Always
         command: ["python", "src/main.py"]
         args:
@@ -48,13 +42,14 @@ spec:
         - "--model_name"
         - "Qwen/Qwen2.5-0.5B-Instruct"
         resources:
-          limits:
-            nvidia.com/gpu: 1
-            memory: "16Gi"
-            cpu: "4"
           requests:
-            memory: "8Gi"
             cpu: "2"
+            memory: "16Gi"
+            ephemeral-storage: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "32Gi"
+            ephemeral-storage: "4Gi"
         volumeMounts:
         - name: data-volume
           mountPath: /data
