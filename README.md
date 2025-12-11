@@ -16,14 +16,23 @@ The pipeline follows a decoupled architecture using Docker and Kubernetes Jobs:
 ## Project Structure
 
 ```text
-.
-├── Dockerfile              # Defines the reproducible training environment
-├── requirements.txt        # Python dependencies
-├── run_pipeline.sh         # Main entry point for orchestration
-└── src/
-    ├── __init__.py
-    ├── main.py             # Main training logic (Hugging Face Trainer)
-    └── tracker.py          # Custom module for GCS synchronization
+.env.example            # Sample environment variables used by the pipeline scripts
+Dockerfile              # GPU-enabled image for the trainer
+Dockerfile.cpu          # CPU-only image variant
+README.md
+dataset/                # Sample Alpaca data and derived JSONL for tests
+├── alpaca_data.json
+└── dataset.jsonl
+job.yaml                # Example/generated Kubernetes Job manifest
+requirements.txt        # Python dependencies for training
+run_pipeline.sh         # Builds image, uploads data, and submits the K8s Job
+src/                    # Training entrypoints
+├── main.py             # Finetuning script with LoRA + tracker integration
+└── tracker.py          # Uploads artifacts/logs to GCS
+utils/                  # Helper scripts
+├── evaluate.py
+└── json2jsonl.py       # Converts Alpaca JSON to JSONL
+workload_idf_conf.sh    # Workload Identity binding helper for GSA/KSA
 ```
 
 ## Prerequisites
